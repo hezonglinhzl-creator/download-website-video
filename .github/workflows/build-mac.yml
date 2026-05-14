@@ -61,7 +61,7 @@ jobs:
           curl -fsS \
             -X POST \
             -H "Content-Type: application/json" \
-            --data "{\"urls\":\"https://www.youtube.com/watch?v=jNQXAC9IVRw\",\"outputDir\":\"$PWD/release/mac/test-downloads\",\"format\":\"best\",\"sourceMode\":\"youtube\",\"useCookies\":false,\"browser\":\"chrome\",\"cookiesPath\":\"\"}" \
+            --data "{\"urls\":\"https://www.w3schools.com/html/mov_bbb.mp4\",\"outputDir\":\"$PWD/release/mac/test-downloads\",\"format\":\"best\",\"sourceMode\":\"generic\",\"useCookies\":false,\"browser\":\"chrome\",\"cookiesPath\":\"\"}" \
             http://127.0.0.1:3218/api/downloads
 
           for i in {1..90}; do
