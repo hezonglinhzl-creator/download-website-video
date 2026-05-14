@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>本地视频下载工具</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Local Video Downloader</p>
+          <h1>本地视频下载工具</h1>
+          <p class="lead">
+            现在按站点模式来解析，思路更接近 `fdownloader`。国内外主流视频站点都能直接选模式，失败时还会自动切到更激进的资源嗅探回退。
+          </p>
+        </div>
+        <div class="hero-card">
+          <div class="metric">
+            <span>支持站点</span>
+            <strong>YouTube / FB / IG / TikTok / 抖音 / 小红书</strong>
+          </div>
+          <div class="metric">
+            <span>下载补强</span>
+            <strong>分片并发 / 登录态重试 / 资源嗅探</strong>
+          </div>
+          <div class="metric">
+            <span>运行地址</span>
+            <strong>127.0.0.1:3218</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel form-panel">
+        <div class="panel-head">
+          <h2>新建下载任务</h2>
+          <p>先选站点模式，再粘贴链接，一行一个。自动识别适合混合批量，手动指定更适合 Facebook、Instagram、抖音、小红书这类站点。</p>
+        </div>
+
+        <div class="preset-strip">
+          <button type="button" class="preset-btn active" data-mode="generic">自动识别</button>
+          <button type="button" class="preset-btn" data-mode="youtube">YouTube</button>
+          <button type="button" class="preset-btn" data-mode="facebook">Facebook</button>
+          <button type="button" class="preset-btn" data-mode="instagram">Instagram</button>
+          <button type="button" class="preset-btn" data-mode="tiktok">TikTok</button>
+          <button type="button" class="preset-btn" data-mode="douyin">抖音</button>
+          <button type="button" class="preset-btn" data-mode="xiaohongshu">小红书</button>
+          <button type="button" class="preset-btn" data-mode="resource-sniff">资源嗅探</button>
+        </div>
+
+        <div id="modeHint" class="mode-hint">
+          自动判断站点并用常规下载策略处理。
+        </div>
+
+        <label class="field">
+          <span>视频链接</span>
+          <textarea
+            id="urls"
+            rows="10"
+            placeholder="https://www.youtube.com/watch?v=...&#10;https://www.facebook.com/...&#10;https://www.douyin.com/video/..."
+          ></textarea>
+        </label>
+
+        <div class="grid">
+          <label class="field">
+            <span>保存目录</span>
+            <div class="inline-field">
+              <input id="outputDir" type="text" />
+              <button id="pickDirBtn" type="button" class="ghost inline-btn">选择目录</button>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>下载模式</span>
+            <select id="format">
+              <option value="best">自动最佳画质</option>
+              <option value="hd-2k">1080p - 2K</option>
+              <option value="4k">4K</option>
+              <option value="audio">仅音频 MP3</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="grid">
+          <label class="field checkbox">
+            <input id="useCookies" type="checkbox" />
+            <span>尝试读取浏览器登录态，适合你自己有权限查看的内容</span>
+          </label>
+
+          <label class="field">
+            <span>浏览器</span>
+            <select id="browser">
+              <option value="chrome">Chrome</option>
+              <option value="edge">Edge</option>
+              <option value="firefox">Firefox</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>cookies.txt 路径（可选，国内站点更推荐）</span>
+          <input
+            id="cookiesPath"
+            type="text"
+            placeholder="例如 C:\\Users\\sales\\Downloads\\douyin-cookies.txt"
+          />
+          <small class="field-note">如果你已经导出过 cookies.txt，这里填写路径会优先于“读取浏览器登录态”。</small>
+        </label>
+
+        <div class="actions">
+          <button id="submitBtn" class="primary">加入下载队列</button>
+          <button id="openBtn" class="ghost">打开保存目录</button>
+        </div>
+
+        <p id="message" class="message"></p>
+        <p class="tip">
+          说明：不支持帮助绕过 DRM 或无权访问内容。资源嗅探只是更积极地抓页面里已经公开可取的媒体资源。
+        </p>
+      </section>
+
+      <section class="panel queue-panel">
+        <div class="panel-head">
+          <h2>任务队列</h2>
+          <p>状态会每 2 秒自动刷新。上方任务栏会汇总总进度、当前网速和进行中的任务数。</p>
+        </div>
+
+        <div class="diag-strip">
+          <div class="diag-card">
+            <span>推荐做法</span>
+            <strong>公开内容先裸跑</strong>
+            <p>Facebook、YouTube、Instagram 的公开视频通常不需要登录态。</p>
+          </div>
+          <div class="diag-card">
+            <span>国内站点</span>
+            <strong>优先 cookies.txt</strong>
+            <p>抖音和小红书更容易卡在 fresh cookies 或浏览器数据库锁。</p>
+          </div>
+          <div class="diag-card">
+            <span>随机网页</span>
+            <strong>资源嗅探已验证</strong>
+            <p>带 HTML5 视频的普通网页已经验证能抓到真实媒体资源。</p>
+          </div>
+        </div>
+
+        <div class="queue-toolbar">
+          <div class="toolbar-card">
+            <span>总任务</span>
+            <strong id="statTotal">0</strong>
+          </div>
+          <div class="toolbar-card">
+            <span>进行中</span>
+            <strong id="statRunning">0</strong>
+          </div>
+          <div class="toolbar-card">
+            <span>已完成</span>
+            <strong id="statCompleted">0</strong>
+          </div>
+          <div class="toolbar-card">
+            <span>总进度</span>
+            <strong id="statPercent">0%</strong>
+          </div>
+          <div class="toolbar-card">
+            <span>当前网速</span>
+            <strong id="statSpeed">0 B/s</strong>
+          </div>
+        </div>
+
+        <div class="queue-tools">
+          <span id="queueHint">状态每 2 秒自动刷新</span>
+        </div>
+
+        <div id="jobs" class="jobs"></div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
