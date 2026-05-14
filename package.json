@@ -1,0 +1,22 @@
+{
+  "name": "local-video-downloader",
+  "version": "1.1.0",
+  "description": "本地视频下载工具，支持抖音、小红书和资源嗅探回退。",
+  "bin": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build:exe": "pkg . --targets node18-win-x64 --output dist/local-video-downloader.exe",
+    "build:portable:win": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File build/build-portable-win.ps1",
+    "build:portable:mac": "bash build/build-mac-portable.sh"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "README.md"
+    ],
+    "outputPath": "dist"
+  }
+}
