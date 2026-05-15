@@ -1,0 +1,79 @@
+name: Build macOS arm64 package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-test-mac-arm64:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install static ffmpeg helper
+        run: npm install --no-save ffmpeg-static
+
+      - name: Check JavaScript syntax
+        run: node --check server.js
+
+      - name: Build macOS app package
+        run: |
+          FFMPEG_BINARY="$(node -e "console.log(require('ffmpeg-static'))")" \
+          PACKAGE_SUFFIX="arm64" \
+          bash build/build-mac-portable.sh
+
+      - name: Start packaged app server
+        run: |
+          APP_ROOT="$PWD/release/mac/portable/Local Video Downloader.app/Contents/Resources/app"
+          NODE_BIN="$PWD/release/mac/portable/Local Video Downloader.app/Contents/Resources/node/bin/node"
+          NO_OPEN_BROWSER=1 "$NODE_BIN" "$APP_ROOT/server.js" > /tmp/local-video-downloader-ci.log 2>&1 &
+          echo $! > /tmp/local-video-downloader-ci.pid
+          sleep 5
+
+      - name: Health check
+        run: curl -fsS http://127.0.0.1:3218/api/health
+
+      - name: Download test video
+        run: |
+          mkdir -p "$PWD/release/mac/test-downloads"
+          curl -fsS \
+            -X POST \
+            -H "Content-Type: application/json" \
+            --data "{\"urls\":\"https://www.w3schools.com/html/mov_bbb.mp4\",\"outputDir\":\"$PWD/release/mac/test-downloads\",\"format\":\"best\",\"sourceMode\":\"generic\",\"useCookies\":false,\"browser\":\"chrome\",\"cookiesPath\":\"\"}" \
+            http://127.0.0.1:3218/api/downloads
+
+          for i in {1..90}; do
+            sleep 2
+            STATUS="$(curl -fsS http://127.0.0.1:3218/api/jobs | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const j=JSON.parse(s);console.log(j.jobs[0]?.status||'missing')})")"
+            echo "download status: $STATUS"
+            if [ "$STATUS" = "completed" ]; then
+              exit 0
+            fi
+            if [ "$STATUS" = "failed" ]; then
+              curl -fsS http://127.0.0.1:3218/api/jobs
+              exit 1
+            fi
+          done
+
+          echo "Download test timed out"
+          curl -fsS http://127.0.0.1:3218/api/jobs
+          exit 1
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f /tmp/local-video-downloader-ci.pid ]; then
+            kill "$(cat /tmp/local-video-downloader-ci.pid)" || true
+          fi
+
+      - name: Upload macOS package
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-video-downloader-mac-arm64
+          path: release/mac/local-video-downloader-mac-arm64.zip
